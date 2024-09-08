@@ -3,11 +3,16 @@
 
 use engage::gamedata::unit::Unit;
 use engage::gamedata::PersonDataFields;
+use std::ffi::c_char;
 
 #[skyline::main(name = "cameraplugin")]
 pub fn main() {
     println!("Prevent Unit Disappearance plugin initialized!");
     
+    install_hooks();
+}
+
+fn install_hooks() {
     skyline::install_hooks!(
         unit_die,
         unit_set_visible,
@@ -18,10 +23,11 @@ pub fn main() {
 }
 
 #[unity::hook("App", "Unit", "Die")]
-pub fn unit_die(this: &mut Unit) {
-    println!("Unit death function called. Preventing disappearance.");
+pub fn unit_die(_this: &mut Unit) {
+    println!("Unit death function called. Attempting to prevent disappearance.");
     // Instead of preventing the death, we'll just log it for now
-    call_original!(this)
+    // Uncomment the following line if you want to call the original function
+    // call_original!(_this)
 }
 
 #[unity::hook("App", "Unit", "SetVisible")]
@@ -32,8 +38,19 @@ pub fn unit_set_visible(this: &mut Unit, visible: bool) {
 }
 
 #[unity::hook("Combat", "PersonDataFields", "SetDie")]
-pub fn person_set_die(this: &mut PersonDataFields, value: Option<&'static str>) {
-    println!("Attempt to set 'die' field intercepted. Preventing change.");
+pub fn person_set_die(_this: &mut PersonDataFields, value: *const c_char) {
+    if !value.is_null() {
+        unsafe {
+            let c_str = std::ffi::CStr::from_ptr(value);
+            if let Ok(str_slice) = c_str.to_str() {
+                println!("Attempt to set 'die' field intercepted. Value: {}. Preventing change.", str_slice);
+            } else {
+                println!("Attempt to set 'die' field intercepted. Value is not valid UTF-8. Preventing change.");
+            }
+        }
+    } else {
+        println!("Attempt to set 'die' field to null intercepted. Preventing change.");
+    }
     // We're not calling the original function, effectively preventing the change
 }
 
@@ -53,7 +70,7 @@ pub fn person_update(this: &mut PersonDataFields) {
 }
 
 #[unity::hook("App", "Unit", "IsVisible")]
-pub fn unit_is_visible(this: &Unit) -> bool {
+pub fn unit_is_visible(_this: &Unit) -> bool {
     println!("IsVisible called. Forcing visibility.");
     true // Always return true to keep the unit visible
 }

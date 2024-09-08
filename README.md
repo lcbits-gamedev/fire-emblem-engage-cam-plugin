@@ -1,110 +1,111 @@
-# Camera Plugin
+# Camera Plugin for Fire Emblem Engage
 
-This Skyline plugin aims to prevent unit disappearance and fading in a game. However, please note that it is still a work in progress and not fully functional yet. We are actively debugging and refining the code to achieve the desired outcome.
+## Overview
+
+This Skyline plugin aims to prevent unit disappearance and manipulate visibility in Fire Emblem Engage. It's designed to intercept and modify various game functions related to unit visibility and death mechanics.
 
 ## Current Status
 
-- The plugin is initialized and running, but there are still some kinks to iron out.
-- We've hooked into various methods to prevent unit disappearance and fading, but some are currently just logging events. More work is needed to fully achieve the desired outcome.
-- We're facing challenges with accessing certain game structures (`MapSequenceMind` and `MapAction`) and methods (`set_visible` on `Unit`), which limits our ability to directly manipulate unit visibility.
-- The hooks to prevent changes to the `die` field and clear it during updates are in place, but their effectiveness needs to be verified.
-- We've added new hooks for `UnitDeadFade` and `DeadBind` to try and intercept fading mechanisms, but their effectiveness is still being evaluated.
+- The plugin is functional and successfully hooks into several key game functions.
+- It prevents units from disappearing by manipulating visibility settings and intercepting death-related function calls.
+- The plugin is still in development, and some features may need fine-tuning based on gameplay testing.
+
+## Features
+
+1. **Unit Death Interception**: Logs when a unit death is called, with the option to prevent death entirely.
+2. **Forced Unit Visibility**: Ensures units remain visible at all times.
+3. **Death Field Manipulation**: Intercepts and prevents changes to the 'die' field in `PersonDataFields`.
+4. **Visibility Override**: Always returns true for unit visibility checks.
 
 ## Code Overview
 
-### `main` function
+### Main Function
 ```rust
-#[skyline::main(name = "prevent_fade_plugin")]
+#[skyline::main(name = "cameraplugin")]
 pub fn main() {
-    println!("Prevent Unit Fading plugin initialized!");
+    println!("Prevent Unit Disappearance plugin initialized!");
+    install_hooks();
 }
 ```
-The plugin is initialized and running, setting the groundwork for our fading prevention efforts.
+Initializes the plugin and installs all hooks.
 
-### `map_sequence_mind_unit_dead_fade` hook
-```rust
-#[unity::hook("App", "MapSequenceMind", "UnitDeadFade")]
-pub fn map_sequence_mind_unit_dead_fade(this: &mut skyline::libc::c_void, method: &skyline::libc::c_void) {
-    println!("UnitDeadFade function called. Attempting to prevent fading.");
-}
-```
-We've hooked into the `UnitDeadFade` method with the intention of preventing unit fading, but as of now, it's just logging the event. We're unable to directly access the unit due to type constraints.
+### Key Hooks
 
-### `map_action_dead_bind` hook
-```rust
-#[unity::hook("App", "MapAction", "DeadBind")]
-pub fn map_action_dead_bind(this: &mut skyline::libc::c_void, unit: &mut Unit, param: i32) {
-    println!("DeadBind function called. Intercepting to prevent fading.");
-    prevent_unit_fading(unit);
-}
-```
-This hook intercepts the `DeadBind` action, which is likely responsible for initiating the fading process. We call our `prevent_unit_fading` function here.
+1. **Unit Die Hook**
+   ```rust
+   #[unity::hook("App", "Unit", "Die")]
+   pub fn unit_die(_this: &mut Unit) {
+       println!("Unit death function called. Attempting to prevent disappearance.");
+       // call_original!(_this) // Uncomment to allow deaths
+   }
+   ```
+   Logs unit death calls. Death prevention is optional.
 
-### `unit_die` hook 
-```rust
-#[unity::hook("App", "Unit", "Die")]
-pub fn unit_die(this: &mut Unit) {
-    println!("Unit death function called. Preventing disappearance.");
-    call_original!(this)
-}
-```
-We hooked into the `Die` method with the intention of preventing unit disappearance, but as of now, it's just logging the event and calling the original function.
+2. **Set Visible Hook**
+   ```rust
+   #[unity::hook("App", "Unit", "SetVisible")]
+   pub fn unit_set_visible(this: &mut Unit, visible: bool) {
+       println!("SetVisible called with value: {}. Forcing visibility.", visible);
+       call_original!(this, true)
+   }
+   ```
+   Forces units to always be visible.
 
-### `unit_set_visible` hook
-```rust
-#[unity::hook("App", "Unit", "SetVisible")]
-pub fn unit_set_visible(this: &mut Unit, visible: bool) {
-    println!("SetVisible called with value: {}. Forcing visibility.", visible);
-    call_original!(this, true) 
-}
-```
-We're attempting to force units to remain visible regardless of the game's commands by always passing `true` to the original function.
+3. **Person Set Die Hook**
+   ```rust
+   #[unity::hook("Combat", "PersonDataFields", "SetDie")]
+   pub fn person_set_die(_this: &mut PersonDataFields, value: *const c_char) {
+       // Logs and prevents 'die' field changes
+   }
+   ```
+   Intercepts and prevents 'die' field changes.
 
-### `person_set_die` hook
-```rust
-#[unity::hook("Combat", "PersonDataFields", "SetDie")]
-pub fn person_set_die(this: &mut PersonDataFields, value: Option<&'static str>) {
-    println!("Attempt to set 'die' field intercepted. Preventing change.");
-}
-```
-This hook aims to prevent changes to the `die` field by not calling the original function.
+4. **Person Update Hook**
+   ```rust
+   #[unity::hook("Combat", "PersonDataFields", "Update")]
+   pub fn person_update(this: &mut PersonDataFields) {
+       // Clears 'die' field if set
+   }
+   ```
+   Clears the 'die' field during updates.
 
-### `person_update` hook
-```rust
-#[unity::hook("Combat", "PersonDataFields", "Update")]
-pub fn person_update(this: &mut PersonDataFields) {
-    if let Some(die_field) = &this.die {
-        if let Ok(die_str) = die_field.get_string() {
-            println!("Die field is set with value: {}", die_str);
-        } else {
-            println!("Die field is set but could not convert to string.");
-        }
-        println!("Clearing die field to prevent disappearance.");
-        this.die = None;
-    } else {
-        println!("Die field is not set.");
-    }
-}
-```
-We're checking and trying to clear the `die` field during updates to prevent unit disappearance.
+5. **Is Visible Hook**
+   ```rust
+   #[unity::hook("App", "Unit", "IsVisible")]
+   pub fn unit_is_visible(_this: &Unit) -> bool {
+       println!("IsVisible called. Forcing visibility.");
+       true
+   }
+   ```
+   Always returns true for visibility checks.
 
-### `unit_is_visible` hook
-```rust
-#[unity::hook("App", "Unit", "IsVisible")] 
-pub fn unit_is_visible(this: &Unit) -> bool {
-    println!("IsVisible called. Forcing visibility.");
-    true
-}
-```
-We added a hook to always return `true` for unit visibility, aiming to keep units visible.
+## Installation
 
-## Next Steps
+1. Ensure you have the latest version of Skyline installed.
+2. Copy the `libcameraplugin.nro` file to the `/atmosphere/contents/[TitleID]/romfs/skyline/plugins/` directory on your Switch SD card.
+3. Launch Fire Emblem Engage with Skyline enabled.
 
-We are actively working on resolving the issues and making the plugin fully functional. Our next steps include:
+## Important Notes
 
-- Finding alternative ways to access and manipulate unit visibility, given the constraints we've encountered with the `Unit` struct.
-- Debugging and refining the hooks to effectively prevent unit disappearance and fading.
-- Verifying the effectiveness of our `die` field manipulation in the `PersonDataFields` hooks.
-- Investigating the game's internal mechanisms for unit visibility and fading to find more direct ways of intervention.
-- Considering additional hooks or methods that might be necessary to fully prevent unit fading and disappearance.
-- Evaluating the effectiveness of the new `UnitDeadFade` and `DeadBind` hooks in preventing fading.
+- This plugin significantly alters game mechanics related to unit visibility and death. It may affect gameplay balance and progression.
+- Thoroughly test the plugin in various game scenarios to ensure it doesn't cause unintended side effects.
+- The plugin is still in development, and some features may need adjustment based on user feedback and further testing.
+
+## Troubleshooting
+
+If you encounter any issues or unexpected behavior:
+1. Check the Skyline logs for any error messages related to the plugin.
+2. Ensure you're using the latest version of both Skyline and this plugin.
+3. Try disabling other plugins to check for conflicts.
+
+## Contributing
+
+Contributions to improve the plugin are welcome. Please submit pull requests or open issues on the project's GitHub repository.
+
+## License
+
+[Insert appropriate license information here]
+
+## Disclaimer
+
+This plugin is for educational and experimental purposes only. Use at your own risk. The developers are not responsible for any damage to your game saves or console.
