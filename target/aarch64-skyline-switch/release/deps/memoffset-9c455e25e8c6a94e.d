@@ -1,0 +1,10 @@
+C:\GameDev\Modding\FireEmblemEngage\fire-emblem-engage-cam-plugin\target\aarch64-skyline-switch\release\deps\libmemoffset-9c455e25e8c6a94e.rmeta: C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\lib.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\raw_field.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\offset_of.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\span_of.rs
+
+C:\GameDev\Modding\FireEmblemEngage\fire-emblem-engage-cam-plugin\target\aarch64-skyline-switch\release\deps\libmemoffset-9c455e25e8c6a94e.rlib: C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\lib.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\raw_field.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\offset_of.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\span_of.rs
+
+C:\GameDev\Modding\FireEmblemEngage\fire-emblem-engage-cam-plugin\target\aarch64-skyline-switch\release\deps\memoffset-9c455e25e8c6a94e.d: C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\lib.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\raw_field.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\offset_of.rs C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\span_of.rs
+
+C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\lib.rs:
+C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\raw_field.rs:
+C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\offset_of.rs:
+C:\Users\catch\.cargo\registry\src\index.crates.io-6f17d22bba15001f\memoffset-0.8.0\src\span_of.rs:
