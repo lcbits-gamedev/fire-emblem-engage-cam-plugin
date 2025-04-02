@@ -25,7 +25,8 @@ name = "cameraplugin"
 version = "0.2.2"
 dependencies = [
  "engage",
- "skyline 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nnsdk 0.4.0 (git+https://github.com/ultimate-research/nnsdk-rs?rev=9c13b526)",
+ "skyline 0.2.1 (git+https://github.com/Raytwo/skyline-rs?branch=master)",
  "unity",
 ]
 
@@ -150,6 +151,12 @@ checksum = "6823e4bff6dee10a75dfee95afe1c5a7f93a1b99a20013663e0cb04b3a64f867"
 
 [[package]]
 name = "libc-nnsdk"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99102e4669e461772fcdfeb04ce9dec03c5fade700a3c12b1a4c2a27d97e9b68"
+
+[[package]]
+name = "libc-nnsdk"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ece4a9a361bf75974e2c18b719e8fd501e4e336d7a5db22d077c4f2367a94be9"
@@ -192,11 +199,19 @@ dependencies = [
 
 [[package]]
 name = "nnsdk"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0f4537c7470ba25f406d42c8cbfe26f64099af4b613e715c6bcb3d25856896c"
+checksum = "df4385052e8e8252e9a6b87282f74e94fca6ab074cdc1415d4ad5c4cc3920fe3"
 dependencies = [
- "libc-nnsdk 0.2.0",
+ "libc-nnsdk 0.3.0",
+]
+
+[[package]]
+name = "nnsdk"
+version = "0.4.0"
+source = "git+https://github.com/ultimate-research/nnsdk-rs?rev=9c13b526#9c13b5262f951695d2194a31dd9a127356eae5ee"
+dependencies = [
+ "libc-nnsdk 0.4.0",
 ]
 
 [[package]]
@@ -244,12 +259,11 @@ dependencies = [
 [[package]]
 name = "skyline"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9950fc129490cff3f4755aa523df16aeeb80130699abfc59cc7c6df8fc5802ad"
+source = "git+https://github.com/Raytwo/skyline-rs?branch=master#9bc51b01ff7d10026f683b2e382e5010fa8d5b7a"
 dependencies = [
  "libc-nnsdk 0.2.0",
- "nnsdk 0.2.0",
- "skyline_macro 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nnsdk 0.3.0",
+ "skyline_macro 0.2.0 (git+https://github.com/Raytwo/skyline-rs?branch=master)",
 ]
 
 [[package]]
@@ -258,15 +272,14 @@ version = "0.2.1"
 source = "git+https://github.com/Raytwo/skyline-rs?branch=preview#3ce8983f65b649e58f20184bec176520846d4b2b"
 dependencies = [
  "libc-nnsdk 0.2.0",
- "nnsdk 0.4.0",
+ "nnsdk 0.4.0 (git+https://github.com/ultimate-research/nnsdk-rs)",
  "skyline_macro 0.2.0 (git+https://github.com/Raytwo/skyline-rs?branch=preview)",
 ]
 
 [[package]]
 name = "skyline_macro"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9194b20ee17c1de2ed299cfd9b8b56160a35b5579b3273c416ab4e5c058844dc"
+source = "git+https://github.com/Raytwo/skyline-rs?branch=master#9bc51b01ff7d10026f683b2e382e5010fa8d5b7a"
 dependencies = [
  "lazy_static",
  "proc-macro2",
