@@ -26,7 +26,7 @@ version = "0.2.2"
 dependencies = [
  "engage",
  "nnsdk 0.4.0 (git+https://github.com/ultimate-research/nnsdk-rs?rev=9c13b526)",
- "skyline 0.2.1 (git+https://github.com/Raytwo/skyline-rs?branch=master)",
+ "skyline",
  "unity",
 ]
 
@@ -80,7 +80,7 @@ dependencies = [
  "lazysimd",
  "modular-bitfield",
  "once_cell",
- "skyline 0.2.1 (git+https://github.com/Raytwo/skyline-rs?branch=preview)",
+ "skyline",
  "unity",
 ]
 
@@ -130,7 +130,7 @@ version = "0.1.0"
 source = "git+https://github.com/Raytwo/lazysimd#3effca0fd2ebcd95d9b4113f4290e5865aa43792"
 dependencies = [
  "lazysimd_macro",
- "skyline 0.2.1 (git+https://github.com/Raytwo/skyline-rs?branch=preview)",
+ "skyline",
 ]
 
 [[package]]
@@ -148,12 +148,6 @@ name = "libc-nnsdk"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6823e4bff6dee10a75dfee95afe1c5a7f93a1b99a20013663e0cb04b3a64f867"
-
-[[package]]
-name = "libc-nnsdk"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99102e4669e461772fcdfeb04ce9dec03c5fade700a3c12b1a4c2a27d97e9b68"
 
 [[package]]
 name = "libc-nnsdk"
@@ -195,15 +189,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "nnsdk"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df4385052e8e8252e9a6b87282f74e94fca6ab074cdc1415d4ad5c4cc3920fe3"
-dependencies = [
- "libc-nnsdk 0.3.0",
 ]
 
 [[package]]
@@ -259,32 +244,11 @@ dependencies = [
 [[package]]
 name = "skyline"
 version = "0.2.1"
-source = "git+https://github.com/Raytwo/skyline-rs?branch=master#9bc51b01ff7d10026f683b2e382e5010fa8d5b7a"
-dependencies = [
- "libc-nnsdk 0.2.0",
- "nnsdk 0.3.0",
- "skyline_macro 0.2.0 (git+https://github.com/Raytwo/skyline-rs?branch=master)",
-]
-
-[[package]]
-name = "skyline"
-version = "0.2.1"
 source = "git+https://github.com/Raytwo/skyline-rs?branch=preview#3ce8983f65b649e58f20184bec176520846d4b2b"
 dependencies = [
  "libc-nnsdk 0.2.0",
  "nnsdk 0.4.0 (git+https://github.com/ultimate-research/nnsdk-rs)",
- "skyline_macro 0.2.0 (git+https://github.com/Raytwo/skyline-rs?branch=preview)",
-]
-
-[[package]]
-name = "skyline_macro"
-version = "0.2.0"
-source = "git+https://github.com/Raytwo/skyline-rs?branch=master#9bc51b01ff7d10026f683b2e382e5010fa8d5b7a"
-dependencies = [
- "lazy_static",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
+ "skyline_macro",
 ]
 
 [[package]]
@@ -382,7 +346,7 @@ source = "git+https://github.com/DivineDragonFanClub/unity#9e06f023dee5e2136ea04
 dependencies = [
  "lazysimd",
  "memoffset",
- "skyline 0.2.1 (git+https://github.com/Raytwo/skyline-rs?branch=preview)",
+ "skyline",
  "thiserror",
  "unity-macro",
 ]

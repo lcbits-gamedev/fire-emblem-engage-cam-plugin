@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 # Force the compiler to use a specific skyline version
 [dependencies]
-skyline = { git = "https://github.com/Raytwo/skyline-rs", branch = "master" }
+skyline = { git = "https://github.com/Raytwo/skyline-rs", branch = "preview" }
 engage = { git = "https://github.com/DivineDragonFanClub/engage", default-features = false }
 unity = { git = "https://github.com/DivineDragonFanClub/unity", default-features = false }
 

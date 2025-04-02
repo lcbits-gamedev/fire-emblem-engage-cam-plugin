@@ -1,0 +1,1 @@
+C:\GameDev\Modding\FireEmblemEngage\fire-emblem-engage-cam-plugin\target\aarch64-skyline-switch\release\libcameraplugin.so: C:\GameDev\Modding\FireEmblemEngage\fire-emblem-engage-cam-plugin\src\lib.rs
