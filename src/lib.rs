@@ -35,11 +35,12 @@ pub fn main() {
     println!("[PreventDisappearance+CameraMod] Initializing...");
     skyline::install_hooks!(
         // --- Visibility Hook ---
-        // Still disabled until verified/corrected for v2.0.0
-        // character_builder_set_visible_forced,
+        // Re-adding based on previously working script.
+        // WARNING: This previously caused a MissingMethod panic in v2.0.0.
+        character_builder_set_visible_forced,
 
         // --- Death State Hook ---
-        unit_is_dead, // Still useful? Keep for now.
+        unit_is_dead, // From previous script
 
         // --- Camera Hooks ---
         // Hook to find the target AxisState instance using MutateCameraState
@@ -47,28 +48,37 @@ pub fn main() {
         // Hook to modify the found AxisState instance
         axis_state_update
     );
+    // If execution reaches here, all hooks were installed without panic
     println!("[PreventDisappearance+CameraMod] Hooks installed successfully!");
 }
 
 // --- Hooks ---
 
-/* --- Visibility Hook ---
- * TEMPORARILY DISABLED - Needs verification for FE:Engage v2.0.0
- * The original hook `Combat.CharacterBuilder.SetVisibleForced(bool)` caused a MissingMethod panic.
- * Need to use Il2CppInspector to find the correct method/class/signature for v2.0.0.
- */
-/*
+// --- Visibility Hook ---
+// Re-added exactly from the previously working script.
+// If this panics, the method signature/path is incorrect for v2.0.0.
 #[unity::hook("Combat", "CharacterBuilder", "SetVisibleForced")]
-pub fn character_builder_set_visible_forced(...) { ... }
-*/
+pub fn character_builder_set_visible_forced(
+    this: &mut c_void, // Note: Type is just c_void here, skyline::libc::c_void is the same
+    value: bool,
+    method_info: Option<&c_void>
+) {
+    println!("[PreventDisappearance+CameraMod] SetVisibleForced called with value: {}. Forcing visibility.", value);
+
+    // Always set to visible, regardless of the input value
+    call_original!(this, true, method_info)
+}
 
 
 // --- Death State Hook ---
-// Allows the game to mark units as dead internally. Doesn't affect visibility currently.
+// From previously working script. Allows the game to mark units as dead internally.
 #[unity::hook("App", "Unit", "IsDead")]
 pub fn unit_is_dead(this: &Unit, method_info: Option<&c_void>) -> bool {
     let is_dead = call_original!(this, method_info);
-    // if is_dead { println!("[CameraMod] Unit {:?} marked dead.", this.pointer); } // Optional log
+    if is_dead {
+        // Corrected: Cast 'this' to a pointer and use {:p} formatter
+        println!("[PreventDisappearance+CameraMod] Unit {:p} marked dead, but SetVisibleForced hook should keep it visible.", this as *const Unit);
+    }
     is_dead
 }
 
@@ -77,6 +87,7 @@ pub fn unit_is_dead(this: &Unit, method_info: Option<&c_void>) -> bool {
 
 // Hook MutateCameraState on the transposer to identify its instance and find m_XAxis.
 // Signature assumption: fn(this, &mut CameraState, f32)
+// WARNING: May cause MissingMethod panic if incorrect for v2.0.0.
 #[unity::hook("Cinemachine", "CinemachineOrbitalTransposer", "MutateCameraState")]
 fn orbital_transposer_mutate_camera_state(
     this: &mut c_void, // Pointer to the CinemachineOrbitalTransposer instance
@@ -130,8 +141,6 @@ fn axis_state_update(this: &mut AxisState, delta_time: f32, method_info: Option<
         call_original!(this, delta_time, method_info);
 
         // Restore original values *after* the call.
-        // This is important to potentially avoid breaking other logic
-        // that might read these values *after* the Update call.
         this.min_value = original_min;
         this.max_value = original_max;
         this.wrap = original_wrap;
