@@ -7,125 +7,137 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 // --- Struct Definitions (Crucial - Offsets/Layout MUST be verified) ---
 
 // Represents C# struct Cinemachine.AxisState
-// WARNING: Field order and types are BEST GUESSES based on common Unity/C# patterns.
-//          Verify using tools like Il2CppInspector on the game's specific version!
+// WARNING: Field order and types are BEST GUESSES - VERIFY WITH IL2CPPINSPECTOR!
 #[repr(C)]
 struct AxisState {
-    // --- Fields likely involved in calculation ---
-    value: f32,             // The current value of the axis
-    _padding1: [u8; 0x8],   // Padding? Or other fields like speed, accel, decel?
-                            // Offsets need verification. Let's assume some exist.
-    max_speed: f32,         // Max speed of axis change?
-    accel_time: f32,        // Acceleration time?
-    decel_time: f32,        // Deceleration time?
-
-    // --- Fields controlling clamping and wrapping ---
-    _padding2: [u8; 0x4],   // More padding/unknown fields
-    min_value: f32,         // Minimum allowed value (clamp)
-    max_value: f32,         // Maximum allowed value (clamp)
-    wrap: bool,             // Wrap value around min/max?
-
-    // --- Other potential fields ---
-    // There might be more fields related to input, recentering etc.
-    // We only *strictly* need min_value, max_value, and wrap for this mod.
-    // But the *offsets* depend on the full structure.
-    // Add more fields based on Il2CppInspector output if needed.
-    _padding_to_end: [u8; 0x2F], // Adjust size to match actual total size if known
-                                 // Example: If total size is 0x50, padding needed here.
-                                 // Needs confirmation.
+    value: f32,
+    _padding1: [u8; 0x8],
+    max_speed: f32,
+    accel_time: f32,
+    decel_time: f32,
+    _padding2: [u8; 0x4],
+    min_value: f32,
+    max_value: f32,
+    wrap: bool,
+    _padding_to_end: [u8; 0x2F], // Adjust size based on verification! Example size: 0x50 bytes total
 }
 
 // Represents C# class Cinemachine.CinemachineOrbitalTransposer
-// We only need the offset to m_XAxis.
-// WARNING: OFFSET IS A PLACEHOLDER - VERIFY!
-const ORBITAL_TRANSPOSER_XAXIS_OFFSET: usize = 0xA0; // EXAMPLE OFFSET - FIND THE REAL ONE
+// WARNING: OFFSET IS A PLACEHOLDER - VERIFY WITH IL2CPPINSPECTOR!
+const ORBITAL_TRANSPOSER_XAXIS_OFFSET: usize = 0xA0; // EXAMPLE OFFSET - FIND THE REAL ONE!
 
 // --- Global State for Target Axis ---
-
-// Stores the memory address of the AxisState instance we want to modify (OrbitalTransposer's m_XAxis).
-// Use AtomicUsize for basic thread safety, initialized to 0 (invalid address).
 static TARGET_COMBAT_XAXIS_ADDRESS: AtomicUsize = AtomicUsize::new(0);
 
 // --- Plugin Entry Point ---
-
 #[skyline::main(name = "prevent_disappearance_and_camera_mod")]
 pub fn main() {
     println!("[PreventDisappearance+CameraMod] Initializing...");
-    // Install hooks - Temporarily disabling the problematic one
     skyline::install_hooks!(
-        // Temporarily disabled due to MissingMethod panic
+        // --- Visibility Hook ---
+        // Still disabled until verified/corrected for v2.0.0
         // character_builder_set_visible_forced,
-        unit_is_dead,
-        orbital_transposer_on_validate,
+
+        // --- Death State Hook ---
+        unit_is_dead, // Still useful? Keep for now.
+
+        // --- Camera Hooks ---
+        // Hook to find the target AxisState instance using MutateCameraState
+        orbital_transposer_mutate_camera_state,
+        // Hook to modify the found AxisState instance
         axis_state_update
     );
-    // If execution reaches here, hooks were installed without panic
     println!("[PreventDisappearance+CameraMod] Hooks installed successfully!");
 }
 
 // --- Hooks ---
 
-/* TEMPORARILY DISABLED - Caused panic: Failed to find method Combat.CharacterBuilder(SetVisibleForced)
+/* --- Visibility Hook ---
+ * TEMPORARILY DISABLED - Needs verification for FE:Engage v2.0.0
+ * The original hook `Combat.CharacterBuilder.SetVisibleForced(bool)` caused a MissingMethod panic.
+ * Need to use Il2CppInspector to find the correct method/class/signature for v2.0.0.
+ */
+/*
 #[unity::hook("Combat", "CharacterBuilder", "SetVisibleForced")]
-pub fn character_builder_set_visible_forced(
-    this: &mut c_void,
-    // Original signature based on previously working script:
-    value: bool,
-    method_info: Option<&c_void>,
-) {
-    println!("[PreventDisappearance+CameraMod] SetVisibleForced called with value: {}. Forcing visibility.", value);
-
-    // Always set to visible, regardless of the input value
-    call_original!(this, true, method_info)
-}
+pub fn character_builder_set_visible_forced(...) { ... }
 */
 
 
-// Death State Hook (Unchanged)
+// --- Death State Hook ---
+// Allows the game to mark units as dead internally. Doesn't affect visibility currently.
 #[unity::hook("App", "Unit", "IsDead")]
 pub fn unit_is_dead(this: &Unit, method_info: Option<&c_void>) -> bool {
     let is_dead = call_original!(this, method_info);
-    // Optional logging
-    // if is_dead {
-    //     println!("[PreventDisappearance+CameraMod] Unit {:?} marked as dead, remains visible.", this.pointer);
-    // }
+    // if is_dead { println!("[CameraMod] Unit {:?} marked dead.", this.pointer); } // Optional log
     is_dead
 }
 
-// Camera Axis Identification Hook (Unchanged)
-#[unity::hook("Cinemachine", "CinemachineOrbitalTransposer", "OnValidate")]
-fn orbital_transposer_on_validate(this: &c_void, method_info: Option<&c_void>) {
-    let axis_state_address = (this as *const c_void as usize) + ORBITAL_TRANSPOSER_XAXIS_OFFSET;
-    let old_address = TARGET_COMBAT_XAXIS_ADDRESS.swap(axis_state_address, Ordering::Relaxed);
 
-    if old_address != axis_state_address && axis_state_address != 0 {
-         println!("[CameraMod] Identified potential combat X-Axis state at address: {:#X}", axis_state_address);
+// --- Camera Hooks ---
+
+// Hook MutateCameraState on the transposer to identify its instance and find m_XAxis.
+// Signature assumption: fn(this, &mut CameraState, f32)
+#[unity::hook("Cinemachine", "CinemachineOrbitalTransposer", "MutateCameraState")]
+fn orbital_transposer_mutate_camera_state(
+    this: &mut c_void, // Pointer to the CinemachineOrbitalTransposer instance
+    state: &mut c_void, // Pointer to the CameraState struct being modified
+    delta_time: f32,    // Delta time
+    method_info: Option<&c_void>
+) {
+    // Calculate the potential address of the m_XAxis field within this transposer.
+    // REQUIRES THE CORRECT ORBITAL_TRANSPOSER_XAXIS_OFFSET!
+    let potential_axis_address = (this as *const c_void as usize) + ORBITAL_TRANSPOSER_XAXIS_OFFSET;
+
+    // Store this address globally. This should be called for the active transposer.
+    let old_address = TARGET_COMBAT_XAXIS_ADDRESS.swap(potential_axis_address, Ordering::Relaxed);
+
+    // Log only if the address changes to avoid spamming the log
+    if old_address != potential_axis_address && potential_axis_address != 0 {
+         println!("[CameraMod] Identified potential combat X-Axis state via MutateCameraState at address: {:#X}", potential_axis_address);
     }
-    call_original!(this, method_info);
+
+    // Call the original MutateCameraState function with the correct arguments
+    call_original!(this, state, delta_time, method_info);
 }
 
-// Camera Axis Update Hook (Unchanged)
+
+// Hook the core AxisState update method. This is where we modify rotation limits.
 #[unity::hook("Cinemachine", "AxisState", "Update")]
 fn axis_state_update(this: &mut AxisState, delta_time: f32, method_info: Option<&c_void>) {
+    // Get the address of the current AxisState instance being updated.
     let current_address = this as *mut AxisState as usize;
+
+    // Load the target address we hopefully found via MutateCameraState.
     let target_address = TARGET_COMBAT_XAXIS_ADDRESS.load(Ordering::Relaxed);
 
+    // Check if the current AxisState is the one we want to modify.
     if target_address != 0 && current_address == target_address {
-        // println!("[CameraMod] Modifying AxisState at {:#X}", current_address); // Debug logging
+        // It's our target axis! Modify its properties before calling the original update.
+         println!("[CameraMod] Modifying AxisState at {:#X}", current_address); // Debug logging
+
+        // Store original values
         let original_min = this.min_value;
         let original_max = this.max_value;
         let original_wrap = this.wrap;
 
-        this.min_value = -180.0;
-        this.max_value = 180.0;
-        this.wrap = true;
+        // Apply desired settings for 360 rotation
+        this.min_value = -180.0; // Allow full circle
+        this.max_value = 180.0;  // Allow full circle
+        this.wrap = true;        // Enable wrapping
 
+        // Call the original AxisState.Update function
+        // This will now use our modified min/max/wrap values for its calculations.
         call_original!(this, delta_time, method_info);
 
+        // Restore original values *after* the call.
+        // This is important to potentially avoid breaking other logic
+        // that might read these values *after* the Update call.
         this.min_value = original_min;
         this.max_value = original_max;
         this.wrap = original_wrap;
+
     } else {
+        // Not our target axis, just call the original function without modifications.
         call_original!(this, delta_time, method_info);
     }
 }
