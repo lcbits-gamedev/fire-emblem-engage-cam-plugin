@@ -17,9 +17,8 @@ pub fn main() {
     skyline::install_hooks!(
         character_builder_set_visible_forced, // Keep this for initial visibility
         camera_switch_switch_camera,
-        camera_manager_end_camera_hook,
-        // character_hide_hook // Comment out or remove this hook
-        character_teardown_for_combat_hook // Add the new hook
+        // camera_manager_end_camera_hook,
+        // character_teardown_for_combat_hook 
     );
     println!("[NoVanish/NoDeathCam/NoMapReturn] ready!");
 }
@@ -53,6 +52,7 @@ fn camera_switch_switch_camera(
     call_original!(this, next_camera, force, method_info);
 }
 
+/*
 // ───────────────────────── MAP RETURN PATCH ──────────────────────────
 #[unity::hook("Combat", "CameraManager", "EndCamera", 2)]
 fn camera_manager_end_camera_hook(
@@ -80,3 +80,4 @@ fn character_teardown_for_combat_hook(
     // Prevent the original method from running, stopping the fade-out tween.
     return; // Original returns void.
 }
+*/
